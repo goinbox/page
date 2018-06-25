@@ -5,6 +5,10 @@ import (
 	"math"
 )
 
+var (
+	ErrEndPage = errors.New("end page")
+)
+
 type PageObj struct {
 	Pageno     int64
 	TotalRows  int64
@@ -48,6 +52,21 @@ func (p *PageObj) InitPage(pageno, totalRows, rowCnt int64) error {
 	}
 
 	p.RowBgn = (p.Pageno - 1) * p.RowCnt
+	if p.RowBgn+p.RowCnt > p.TotalRows {
+		p.RowCnt = p.TotalRows - p.RowBgn
+	}
 
 	return nil
+}
+
+func (p *PageObj) Rewind() error {
+	return p.InitPage(1, p.TotalRows, p.RowCnt)
+}
+
+func (p *PageObj) Next() error {
+	if p.Pageno == p.TotalPages {
+		return ErrEndPage
+	}
+
+	return p.InitPage(p.Pageno+1, p.TotalRows, p.RowCnt)
 }
